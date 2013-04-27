@@ -1,0 +1,17 @@
+This tool is used to help merging session maps created from Ender's client for the Salem Game (http://salemthegame.com).
+
+It was originally inspired by (salem-map-tool, at https://code.google.com/p/salem-map-tool/) but differs in that it will try to automatically find matches in your session maps.
+This is achieved by hashing the files and looking for files with same hashes.
+
+How to use
+- have java installed (was tested with java7)
+- double click the jar file
+- By default, the tool will look for salem maps in $USER_HOME$/Salem/map. If you have connect on multiple servers it should ask you to choose one. If it doesn't find any suitable directory, you will be given a change to choose one. This must be the parent directory of the sessions directories.
+- When merging sessions, both original session directories will be emptied/deleted, and a new directory will be created with today's date. For each tile existing in both sessions, the more recent one will be kept (and last modified date preserved).
+
+Known issues
+- will get confused by open water (maps with tiles of only water), as they are all identical
+- get confused when the client changes the colors/hues of tiles, (something which recently happened). In that case you're down to the above linked salem-map tool.
+
+
+This file was modified by IntelliJ IDEA 12.1.2 for binding GitHub repository
