@@ -12,6 +12,3 @@ How to use
 Known issues
 - will get confused by open water (maps with tiles of only water), as they are all identical
 - get confused when the client changes the colors/hues of tiles, (something which recently happened). In that case you're down to the above linked salem-map tool.
-
-
-This file was modified by IntelliJ IDEA 12.1.2 for binding GitHub repository
