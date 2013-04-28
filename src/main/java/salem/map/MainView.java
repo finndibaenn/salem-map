@@ -229,7 +229,7 @@ public class MainView {
 					mergeSpec.match.session1.rootDir.delete();
 					mergeSpec.match.session2.rootDir.delete();
 
-					PlaySession newSession = new PlaySession(destDir, tilesRepository);
+					PlaySession newSession = new PlaySession(destDir, tilesRepository, new DefaultBoundedRangeModel());
 					refreshSessionsList();
 					sessionList.setSelectedValue(newSession, true);
 
@@ -270,31 +270,97 @@ public class MainView {
 		});
 	}
 
+	static class LoadDialog {
+		private final JDialog dialog;
+		private final BoundedRangeModel sessionsRangeModel;
+		private final BoundedRangeModel currentSessionRangeModel;
+		private final JLabel currentFileLabel;
+
+		LoadDialog(MainView mainView) {
+			dialog = new JDialog((Frame) mainView.contentPane.getRootPane().getParent(), "Loading maps ...", false);
+			JProgressBar progressBar = new JProgressBar();
+			sessionsRangeModel = progressBar.getModel();
+			sessionsRangeModel.setMinimum(0);
+			currentFileLabel = new JLabel("reading ...");
+			JProgressBar currentSessionPB = new JProgressBar();
+			currentSessionRangeModel = currentSessionPB.getModel();
+
+			JPanel progressPanel = new JPanel(new BorderLayout());
+			progressPanel.add(progressBar, BorderLayout.NORTH);
+			progressPanel.add(currentSessionPB, BorderLayout.SOUTH);
+			dialog.getContentPane().setLayout(new BorderLayout());
+			dialog.getContentPane().add(progressPanel, BorderLayout.NORTH);
+			dialog.getContentPane().add(currentFileLabel, BorderLayout.SOUTH);
+			mainView.contentPane.getRootPane().getGlassPane().setVisible(true);
+			dialog.pack();
+			dialog.setLocation(300, 300);
+			dialog.setSize(300, 100);
+		}
+	}
+
 	private void refreshData(File rootDir) throws Exception {
 		sessionListModel.clear();
 		this.rootDir = rootDir;
-		File[] files = this.rootDir.listFiles();
+		final File[] files = this.rootDir.listFiles();
 		if (null == files) {
 			throw new IllegalArgumentException("root dir has no files");
 		}
-
 		tilesRepository = new TilesRepository();
-		ArrayList<PlaySession> sessions = new ArrayList<PlaySession>();
-		for (File file : files) {
-			if (file.isDirectory()) {
-				if (file.list().length == 0) {
-					file.delete();
-					continue;
+		final ArrayList<PlaySession> sessions = new ArrayList<PlaySession>();
+		final LoadDialog loadDialog = new LoadDialog(this);
+		loadDialog.dialog.setVisible(true);
+		loadDialog.sessionsRangeModel.setMaximum(files.length);
+		try {
+			new Thread((new Runnable() {
+				public void run() {
+					try {
+						for (final File file : files) {
+//							System.out.println("reading "+file);
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									loadDialog.currentFileLabel.setText(file.getName());
+								}
+							});
+							if (file.isDirectory()) {
+								if (file.list().length == 0) {
+									file.delete();
+									continue;
+								}
+
+								PlaySession session = new PlaySession(file, tilesRepository, loadDialog.currentSessionRangeModel);
+								sessions.add(session);
+							}
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									loadDialog.sessionsRangeModel.setValue(loadDialog.sessionsRangeModel.getValue() + 1);
+								}
+							});
+						}
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								Collections.sort(sessions, PlaySession.COMPARATOR);
+
+								for (PlaySession session : sessions) {
+									sessionListModel.addElement(session);
+								}
+								matchesList.setListData(new PlaySession[0]);
+							}
+						});
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							loadDialog.dialog.setVisible(false);
+							contentPane.getRootPane().getGlassPane().setVisible(false);
+						}
+					});
+
 				}
-				PlaySession session = new PlaySession(file, tilesRepository);
-				sessions.add(session);
-			}
+			})).run();
+		} finally {
+
 		}
-		Collections.sort(sessions, PlaySession.COMPARATOR);
-		for (PlaySession session : sessions) {
-			sessionListModel.addElement(session);
-		}
-		matchesList.setListData(new PlaySession[0]);
 	}
 
 	private static class PlaySessionListCellRenderer extends DefaultListCellRenderer {

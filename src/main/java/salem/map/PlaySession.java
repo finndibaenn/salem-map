@@ -1,5 +1,6 @@
 package salem.map;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
@@ -22,15 +23,15 @@ public class PlaySession {
 	File[][] tileMap;
 	Point origin;
 
-	public PlaySession(File file, TilesRepository repo) throws Exception {
-		initialize(file, repo);
+	public PlaySession(File file, TilesRepository repo, BoundedRangeModel rangeModel) throws Exception {
+		initialize(file, repo, rangeModel);
 	}
 
 	public File getRootDir() {
 		return rootDir;
 	}
 
-	private void initialize(File rootDir, TilesRepository repository) throws Exception {
+	private void initialize(File rootDir, TilesRepository repository, BoundedRangeModel rangeModel) throws Exception {
 		if (!rootDir.isDirectory()) {
 			return;
 		}
@@ -39,6 +40,9 @@ public class PlaySession {
 		if (files == null) {
 			return;
 		}
+		rangeModel.setMinimum(0);
+		rangeModel.setMaximum(files.length);
+		rangeModel.setValue(0);
 		int minx = Integer.MAX_VALUE;
 		int miny = Integer.MAX_VALUE;
 		int maxx = Integer.MIN_VALUE;
@@ -56,6 +60,8 @@ public class PlaySession {
 				maxx = Math.max(position.x, maxx);
 				maxy = Math.max(position.y, maxy);
 			}
+			rangeModel.setValue(rangeModel.getValue() + 1);
+
 		}
 		origin = new Point(minx * -1, miny * -1);
 		tileMap = new File[maxy - miny + 1][maxx - minx + 1];

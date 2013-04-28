@@ -3,6 +3,7 @@ package salem.map;
 import junit.framework.TestCase;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -54,7 +55,7 @@ public class ExperimentsTest extends TestCase {
 		File[] files = root.listFiles();
 		for (File file : files) {
 			if (file.isDirectory()) {
-				PlaySession session = new PlaySession(file, repo);
+				PlaySession session = new PlaySession(file, repo, new DefaultBoundedRangeModel());
 //                computeHashesRecursively(file, hashes, new PlaySession());
 			} /*else{
 								repo.add(file, playSession);
